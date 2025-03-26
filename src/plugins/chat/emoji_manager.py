@@ -340,12 +340,12 @@ class EmojiManager:
         except Exception:
             logger.exception("[错误] 扫描表情包失败")
 
-    async def _periodic_scan(self, interval_MINS: int = 10):
+    async def _periodic_scan(self):
         """定期扫描新表情包"""
         while True:
             logger.info("[扫描] 开始扫描新表情包...")
             await self.scan_new_emojis()
-            await asyncio.sleep(interval_MINS * 60)  # 每600秒扫描一次
+            await asyncio.sleep(global_config.EMOJI_CHECK_INTERVAL * 60) 
 
     def check_emoji_file_integrity(self):
         """检查表情包文件完整性
@@ -398,7 +398,9 @@ class EmojiManager:
                     # 修复拼写错误
                     if "discription" in emoji:
                         desc = emoji["discription"]
-                        db.emoji.update_one({"_id": emoji["_id"]}, {"$unset": {"discription": ""}, "$set": {"description": desc}})
+                        db.emoji.update_one(
+                            {"_id": emoji["_id"]}, {"$unset": {"discription": ""}, "$set": {"description": desc}}
+                        )
 
                 except Exception as item_error:
                     logger.error(f"[错误] 处理表情包记录时出错: {str(item_error)}")
@@ -416,10 +418,10 @@ class EmojiManager:
             logger.error(f"[错误] 检查表情包完整性失败: {str(e)}")
             logger.error(traceback.format_exc())
 
-    async def start_periodic_check(self, interval_MINS: int = 120):
+    async def start_periodic_check(self):
         while True:
             self.check_emoji_file_integrity()
-            await asyncio.sleep(interval_MINS * 60)
+            await asyncio.sleep(global_config.EMOJI_CHECK_INTERVAL * 60)
 
 
 # 创建全局单例
